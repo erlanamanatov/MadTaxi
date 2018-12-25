@@ -6,6 +6,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class Contact {
 
+  public static final String TYPE_SMS = "sms";
+  public static final String TYPE_PHONE = "phone";
+
     @SerializedName("type")
     @Expose
     private String type;
