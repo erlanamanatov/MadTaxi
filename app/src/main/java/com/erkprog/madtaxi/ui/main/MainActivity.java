@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.erkprog.madtaxi.R;
+import com.erkprog.madtaxi.TaxiApplication;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -26,8 +27,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
 
-    mPresenter = new MainPresenter();
+    mPresenter = new MainPresenter(TaxiApplication.getInstance().getApiService());
     mPresenter.bind(this);
+
+    mPresenter.loadData();
   }
 
   @Override

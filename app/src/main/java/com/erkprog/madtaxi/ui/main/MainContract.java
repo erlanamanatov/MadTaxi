@@ -14,5 +14,7 @@ public interface MainContract {
 
     boolean isViewAttached();
 
+    void loadData();
+
   }
 }
