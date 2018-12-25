@@ -1,5 +1,6 @@
 package com.erkprog.madtaxi.ui.main;
 
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mPresenter.bind(this);
 
     mPresenter.loadData();
+
   }
 
   @Override
@@ -46,5 +48,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   protected void onDestroy() {
     super.onDestroy();
     mPresenter.unbind();
+  }
+
+  @Override
+  public void showMessage(String message) {
+    Snackbar.make(findViewById(R.id.map), message, Snackbar.LENGTH_LONG).show();
   }
 }

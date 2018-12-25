@@ -25,17 +25,23 @@ public class MainPresenter implements MainContract.Presenter {
   @Override
   public void loadData() {
     if (mApiService != null) {
-      mApiService.getNearistTaxi(42.882004,74.582748).enqueue(new Callback<TaxiResponse>() {
+      mApiService.getNearistTaxi(42.882004, 74.582748).enqueue(new Callback<TaxiResponse>() {
         @Override
         public void onResponse(Call<TaxiResponse> call, Response<TaxiResponse> response) {
-          if (response.isSuccessful()) {
-            Log.d(TAG, "onResponse: " + new GsonBuilder().setPrettyPrinting().create().toJson(response));
+          if (isViewAttached()) {
+            if (response.isSuccessful() && response.body() != null) {
+              Log.d(TAG, "onResponse, successfull: " + new GsonBuilder().setPrettyPrinting().create().toJson(response));
+              mView.showMessage("data successfully loaded");
+            }
           }
         }
 
         @Override
         public void onFailure(Call<TaxiResponse> call, Throwable t) {
-          Log.d(TAG, "onFailure: " + t.getMessage());
+          if (isViewAttached()) {
+            Log.d(TAG, "onFailure: " + t.getMessage());
+            mView.showMessage("loading data error " + t.getMessage());
+          }
         }
       });
 

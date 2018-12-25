@@ -4,6 +4,8 @@ public interface MainContract {
 
   interface View {
 
+    void showMessage(String message);
+
   }
 
   interface Presenter {
