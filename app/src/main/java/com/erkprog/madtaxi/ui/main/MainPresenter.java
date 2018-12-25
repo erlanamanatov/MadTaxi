@@ -1,14 +1,16 @@
 package com.erkprog.madtaxi.ui.main;
 
-import android.util.Log;
-
 import com.erkprog.madtaxi.data.api.TaxiApi;
+import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.TaxiResponse;
-import com.google.gson.GsonBuilder;
+import com.erkprog.madtaxi.util.MyUtil;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainPresenter implements MainContract.Presenter {
 
@@ -17,35 +19,78 @@ public class MainPresenter implements MainContract.Presenter {
   private MainContract.View mView;
   private TaxiApi mApiService;
 
-
   MainPresenter(TaxiApi apiService) {
     mApiService = apiService;
   }
 
   @Override
   public void loadData() {
-    if (mApiService != null) {
-      mApiService.getNearistTaxi(42.882004, 74.582748).enqueue(new Callback<TaxiResponse>() {
-        @Override
-        public void onResponse(Call<TaxiResponse> call, Response<TaxiResponse> response) {
-          if (isViewAttached()) {
-            if (response.isSuccessful() && response.body() != null) {
-              Log.d(TAG, "onResponse, successfull: " + new GsonBuilder().setPrettyPrinting().create().toJson(response));
-              mView.showMessage("data successfully loaded");
-            }
-          }
-        }
 
-        @Override
-        public void onFailure(Call<TaxiResponse> call, Throwable t) {
-          if (isViewAttached()) {
-            Log.d(TAG, "onFailure: " + t.getMessage());
-            mView.showMessage("loading data error " + t.getMessage());
-          }
-        }
-      });
+    if (mApiService != null) {
+      mApiService.getNearistTaxi(42.882, 74.584)
+          .subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe(new Observer<TaxiResponse>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(TaxiResponse taxiResponse) {
+              if (isViewAttached()) {
+                mView.showMessage("Data loaded");
+                MyUtil.logd(TAG, "successfull response: " + taxiResponse.getSuccess());
+              }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+              mView.showMessage("Error loading data " + e.getMessage());
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+          });
+
+
+//      Observable<TaxiResponse> response = mApiService.getNearistTaxi(42.882, 74.584);
+
+//      Observable<Company> com = response.flatMap(txres -> {
+//        return Observable.fromIterable(txres.getCompanies());
+//      });
+
+
+//      com.doOnNext(company -> Log.d(TAG, "doOnNext: " + company.getName()))
+//          .subscribeOn(Schedulers.io())
+//          .observeOn(AndroidSchedulers.mainThread())
+//          .subscribe(new Observer<Company>() {
+//            @Override
+//            public void onSubscribe(Disposable d) {
+//
+//            }
+//
+//            @Override
+//            public void onNext(Company company) {
+//              Log.d(TAG, "onNext: " + company.getName());
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onComplete() {
+//
+//            }
+//          });
 
     }
+
+
   }
 
   @Override
