@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.TaxiApplication;
+import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.TaxiCab;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -59,8 +60,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   public void displayTaxi(List<TaxiCab> taxiCabs) {
     mMap.clear();
     for (TaxiCab taxi : taxiCabs) {
+      int logoRes = R.drawable.car;
+      switch (taxi.getCompanyName()) {
+        case Company.COMPANY_NAMBA:
+          logoRes = R.drawable.car_namba;
+          break;
+        case Company.COMPANY_SMS:
+          logoRes = R.drawable.car_sms;
+          break;
+      }
       mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng()))
-          .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)))
+          .icon(BitmapDescriptorFactory.fromResource(logoRes)))
           .setTag(taxi);
     }
   }
