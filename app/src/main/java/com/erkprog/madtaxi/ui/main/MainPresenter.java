@@ -30,7 +30,7 @@ public class MainPresenter implements MainContract.Presenter {
   }
 
   @Override
-  public void loadData() {
+  public void loadData(double lat, double lng) {
     mDisposable.clear();
 
     if (mApiService != null) {
@@ -41,7 +41,7 @@ public class MainPresenter implements MainContract.Presenter {
        * @see #getTaxiCabs(Company)
        * toList operator is used to return all taxiCabs in one list
        */
-      Single<List<TaxiCab>> taxiObs = mApiService.getNearistTaxi(42.882, 74.584)
+      Single<List<TaxiCab>> taxiObs = mApiService.getNearistTaxi(lat, lng)
           .flatMap(taxiResponse -> Observable.fromIterable(taxiResponse.getCompanies()))
           .flatMap(company -> Observable.fromIterable(getTaxiCabs(company)))
           .subscribeOn(Schedulers.io())
@@ -53,6 +53,7 @@ public class MainPresenter implements MainContract.Presenter {
         @Override
         public void onSuccess(List<TaxiCab> taxiCabs) {
           MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiCabs.size());
+          mView.displayTaxi(taxiCabs);
         }
 
         @Override

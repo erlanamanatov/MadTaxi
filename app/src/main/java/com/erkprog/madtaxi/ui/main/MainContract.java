@@ -1,10 +1,16 @@
 package com.erkprog.madtaxi.ui.main;
 
+import com.erkprog.madtaxi.data.entity.TaxiCab;
+
+import java.util.List;
+
 public interface MainContract {
 
   interface View {
 
     void showMessage(String message);
+
+    void displayTaxi(List<TaxiCab> taxiCabs);
 
   }
 
@@ -16,7 +22,7 @@ public interface MainContract {
 
     boolean isViewAttached();
 
-    void loadData();
+    void loadData(double lat, double lng);
 
   }
 }
