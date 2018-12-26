@@ -7,6 +7,9 @@ import com.google.gson.annotations.SerializedName;
 
 public class Company {
 
+  public static final String COMPANY_SMS = "SmsTaxi";
+  public static final String COMPANY_NAMBA = "NambaTaxi";
+
     @SerializedName("name")
     @Expose
     private String name;

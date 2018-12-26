@@ -3,8 +3,6 @@ package com.erkprog.madtaxi.ui.main;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
 
 import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.TaxiApplication;
@@ -13,7 +11,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -49,10 +46,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
-    mMap.setOnCameraMoveStartedListener(reason -> Toast.makeText(this, "move started", Toast.LENGTH_SHORT).show());
-    mMap.setOnCameraIdleListener(() -> Toast.makeText(this, "move cancelled", Toast.LENGTH_SHORT).show());
     mMap.getUiSettings().setRotateGesturesEnabled(false);
     mMap.getUiSettings().setTiltGesturesEnabled(false);
+    mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
 
     LatLng bishkek = new LatLng(42.88, 74.58);
     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 13));
@@ -63,8 +59,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   public void displayTaxi(List<TaxiCab> taxiCabs) {
     mMap.clear();
     for (TaxiCab taxi : taxiCabs) {
-      mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng())).title(taxi.getCompanyName()).icon
-          (BitmapDescriptorFactory.fromResource(R.drawable.car)));
+      mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng()))
+          .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)))
+          .setTag(taxi);
     }
   }
 

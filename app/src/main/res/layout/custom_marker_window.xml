@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                                             xmlns:tools="http://schemas.android.com/tools"
+                                             android:layout_width="wrap_content"
+                                             android:layout_height="wrap_content"
+                                             android:background="@drawable/custom_window_background"
+    android:padding="8dp">
+
+  <TextView
+      android:id="@+id/company_name"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:layout_marginTop="8dp"
+      android:textColor="@android:color/black"
+      android:textSize="16sp"
+      android:textStyle="bold"
+      app:layout_constraintStart_toEndOf="@+id/company_logo"
+      app:layout_constraintTop_toTopOf="parent"
+      tools:text="Namba Taxi"/>
+
+  <TextView
+      android:id="@+id/sms"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="8dp"
+      android:layout_marginTop="8dp"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/company_name"
+      tools:text="SMS"/>
+
+  <TextView
+      android:id="@+id/phone"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      app:layout_constraintStart_toStartOf="@+id/sms"
+      app:layout_constraintTop_toBottomOf="@+id/sms"
+      tools:text="Phone"/>
+
+  <ImageView
+      android:id="@+id/company_logo"
+      android:layout_width="@dimen/logo_size"
+      android:layout_height="@dimen/logo_size"
+      android:layout_marginStart="8dp"
+      app:layout_constraintBottom_toBottomOf="@+id/company_name"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="@+id/company_name"
+      app:srcCompat="@drawable/logo_namba"/>
+</android.support.constraint.ConstraintLayout>
