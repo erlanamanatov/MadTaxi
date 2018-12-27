@@ -1,6 +1,9 @@
 package com.erkprog.madtaxi.ui.main;
 
 import android.Manifest;
+//import android.app.FragmentManager;
+import android.app.Dialog;
+import android.support.v4.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -28,7 +31,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, MainContract.View {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, MainContract.View, OrderDialog.OnMakeOrderListener {
 
   private static final String TAG = "MainActivity";
   private static final int REQUEST_PHONE_CALL = 0;
@@ -72,15 +75,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
     mMap.setOnInfoWindowClickListener(marker -> {
 
-      if (callPhonePermissionGranted()) {
-//        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + ((TaxiCab) marker.getTag()).getPhoneNum()));
-        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + "0550333010"));
-        startActivity(intent);
-      } else {
-        pendingCall = "0550333010";
-        requestCallPhonePermission();
+      TaxiCab taxiCab = (TaxiCab) marker.getTag();
+      if (taxiCab != null) {
+        OrderDialog dialog = OrderDialog.newInstance(taxiCab.getSmsNum(), taxiCab.getPhoneNum());
+        dialog.show(getSupportFragmentManager(), "order dialog");
       }
-
     });
   }
 
@@ -122,14 +121,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     if (requestCode == REQUEST_PHONE_CALL) {
       if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
         if (pendingCall != null) {
-          Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + "0550333010"));
+          Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + pendingCall));
           pendingCall = null;
           startActivity(intent);
         }
-      } else if (pendingCall != null){
+      } else if (pendingCall != null) {
         Intent callIntent = new Intent(Intent.ACTION_DIAL);
-//        callIntent.setData(Uri.parse("tel:" + pendingCall));
-        callIntent.setData(Uri.parse("tel:" + "0550333010"));
+        callIntent.setData(Uri.parse("tel:" + pendingCall));
         pendingCall = null;
         startActivity(callIntent);
       }
@@ -138,6 +136,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     if (requestCode == REQUEST_GPS) {
       if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
       }
+    }
+  }
+
+  @Override
+  public void makeAnOrderUsingSms(String smsNum) {
+    Uri uriSms = Uri.parse("smsto:" + smsNum);
+    Intent intentSMS = new Intent(Intent.ACTION_SENDTO, uriSms);
+    intentSMS.putExtra("sms_body", "");
+    if (intentSMS.resolveActivity(getPackageManager()) != null) {
+      startActivity(intentSMS);
+    }
+  }
+
+  @Override
+  public void makeAnOrderUsingPhoneCall(String phoneNumber) {
+    if (callPhonePermissionGranted()) {
+        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + phoneNumber));
+      if (intent.resolveActivity(getPackageManager()) != null) {
+        startActivity(intent);
+      }
+    } else {
+      pendingCall = phoneNumber;
+      requestCallPhonePermission();
     }
   }
 }
