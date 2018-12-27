@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  public void displayTaxi(List<TaxiCab> taxiCabs) {
+  public void displayNearistTaxiCabs(List<TaxiCab> taxiCabs) {
     mMap.clear();
     for (TaxiCab taxi : taxiCabs) {
       int logoRes = MyUtil.getLogo(taxi.getCompanyName());

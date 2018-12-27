@@ -23,7 +23,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Order a taxi"
+        android:text="@string/order_a_taxi"
         android:textColor="@android:color/black"
         android:textSize="18sp"
         android:textStyle="bold"

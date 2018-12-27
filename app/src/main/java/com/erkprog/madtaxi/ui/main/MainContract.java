@@ -10,7 +10,7 @@ public interface MainContract {
 
     void showMessage(String message);
 
-    void displayTaxi(List<TaxiCab> taxiCabs);
+    void displayNearistTaxiCabs(List<TaxiCab> taxiCabs);
 
     void showOrderDialog(TaxiCab taxiCab);
   }

@@ -1,4 +1,6 @@
 <resources>
   <string name="app_name">MadTaxi</string>
   <string name="title_activity_maps">Map</string>
+  <string name="search">Search</string>
+  <string name="order_a_taxi">Order a taxi</string>
 </resources>

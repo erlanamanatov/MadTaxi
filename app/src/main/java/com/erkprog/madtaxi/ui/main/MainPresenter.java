@@ -1,5 +1,7 @@
 package com.erkprog.madtaxi.ui.main;
 
+import android.util.Log;
+
 import com.erkprog.madtaxi.data.api.TaxiApi;
 import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.Contact;
@@ -52,12 +54,17 @@ public class MainPresenter implements MainContract.Presenter {
       mDisposable.add(taxiObs.subscribeWith(new DisposableSingleObserver<List<TaxiCab>>() {
         @Override
         public void onSuccess(List<TaxiCab> taxiCabs) {
-          MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiCabs.size());
-          mView.displayTaxi(taxiCabs);
+          if (isViewAttached()) {
+            MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiCabs.size());
+            mView.displayNearistTaxiCabs(taxiCabs);
+          }
         }
 
         @Override
         public void onError(Throwable e) {
+          if (isViewAttached()) {
+            mView.showMessage("Can not load nearist taxicabs." + e.getMessage());
+          }
           MyUtil.logd(TAG, "Loading taxi cabs error " + e.getMessage());
         }
       }));
