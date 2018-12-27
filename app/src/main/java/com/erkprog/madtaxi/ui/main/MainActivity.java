@@ -4,6 +4,7 @@ import android.Manifest;
 //import android.app.FragmentManager;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.location.Location;
 import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.v4.app.FragmentManager;
@@ -84,13 +85,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng bishkek = new LatLng(42.88, 74.58);
     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 13));
     mPresenter.loadData(bishkek.latitude, bishkek.longitude);
-    mPresenter.getCurrentLocation();
+//    mPresenter.getCurrentLocation();
   }
 
   private void setUpGoogleMap() {
     mMap.getUiSettings().setRotateGesturesEnabled(false);
     mMap.getUiSettings().setTiltGesturesEnabled(false);
     mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
+    mMap.setOnMarkerClickListener(marker -> {
+      marker.showInfoWindow();
+      return true;
+    });
     mMap.setOnInfoWindowClickListener(marker -> {
       TaxiCab taxiCab = (TaxiCab) marker.getTag();
       if (taxiCab != null) {
@@ -108,6 +113,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
           .icon(BitmapDescriptorFactory.fromResource(logoRes)))
           .setTag(taxi);
     }
+  }
+
+  @Override
+  public void centerMapToLocation(Location location) {
+    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
   }
 
   @Override

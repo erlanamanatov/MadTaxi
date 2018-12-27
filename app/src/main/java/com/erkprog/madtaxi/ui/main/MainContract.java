@@ -1,5 +1,7 @@
 package com.erkprog.madtaxi.ui.main;
 
+import android.location.Location;
+
 import com.erkprog.madtaxi.data.entity.TaxiCab;
 
 import java.util.List;
@@ -13,6 +15,8 @@ public interface MainContract {
     void displayNearistTaxiCabs(List<TaxiCab> taxiCabs);
 
     void showOrderDialog(TaxiCab taxiCab);
+
+    void centerMapToLocation(Location location);
   }
 
   interface Presenter {
