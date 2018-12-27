@@ -1,19 +1,29 @@
 package com.erkprog.madtaxi.ui.main;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.TaxiApplication;
 import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.TaxiCab;
+import com.erkprog.madtaxi.util.MyUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
@@ -21,6 +31,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, MainContract.View {
 
   private static final String TAG = "MainActivity";
+  private static final int REQUEST_PHONE_CALL = 0;
+  private static final int REQUEST_GPS = 1;
+  private String pendingCall;
+
 
   private GoogleMap mMap;
   private MainContract.Presenter mPresenter;
@@ -37,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mPresenter = new MainPresenter(TaxiApplication.getInstance().getApiService());
     mPresenter.bind(this);
 
-
     findViewById(R.id.search).setOnClickListener(v -> {
       LatLng centerMap = mMap.getCameraPosition().target;
       mPresenter.loadData(centerMap.latitude, centerMap.longitude);
@@ -47,28 +60,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
-    mMap.getUiSettings().setRotateGesturesEnabled(false);
-    mMap.getUiSettings().setTiltGesturesEnabled(false);
-    mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
-
+    setUpGoogleMap();
     LatLng bishkek = new LatLng(42.88, 74.58);
     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 13));
     mPresenter.loadData(bishkek.latitude, bishkek.longitude);
   }
 
+  private void setUpGoogleMap() {
+    mMap.getUiSettings().setRotateGesturesEnabled(false);
+    mMap.getUiSettings().setTiltGesturesEnabled(false);
+    mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
+    mMap.setOnInfoWindowClickListener(marker -> {
+
+      if (callPhonePermissionGranted()) {
+//        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + ((TaxiCab) marker.getTag()).getPhoneNum()));
+        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + "0550333010"));
+        startActivity(intent);
+      } else {
+        pendingCall = "0550333010";
+        requestCallPhonePermission();
+      }
+
+    });
+  }
+
   @Override
   public void displayTaxi(List<TaxiCab> taxiCabs) {
     mMap.clear();
+
     for (TaxiCab taxi : taxiCabs) {
-      int logoRes = R.drawable.car;
-      switch (taxi.getCompanyName()) {
-        case Company.COMPANY_NAMBA:
-          logoRes = R.drawable.car_namba;
-          break;
-        case Company.COMPANY_SMS:
-          logoRes = R.drawable.car_sms;
-          break;
-      }
+      int logoRes = MyUtil.getLogo(taxi.getCompanyName());
       mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng()))
           .icon(BitmapDescriptorFactory.fromResource(logoRes)))
           .setTag(taxi);
@@ -84,5 +105,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void showMessage(String message) {
     Snackbar.make(findViewById(R.id.map), message, Snackbar.LENGTH_LONG).show();
+  }
+
+  private boolean callPhonePermissionGranted() {
+    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void requestCallPhonePermission() {
+    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_PHONE_CALL);
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+    if (requestCode == REQUEST_PHONE_CALL) {
+      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (pendingCall != null) {
+          Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + "0550333010"));
+          pendingCall = null;
+          startActivity(intent);
+        }
+      } else if (pendingCall != null){
+        Intent callIntent = new Intent(Intent.ACTION_DIAL);
+//        callIntent.setData(Uri.parse("tel:" + pendingCall));
+        callIntent.setData(Uri.parse("tel:" + "0550333010"));
+        pendingCall = null;
+        startActivity(callIntent);
+      }
+    }
+
+    if (requestCode == REQUEST_GPS) {
+      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+      }
+    }
   }
 }
