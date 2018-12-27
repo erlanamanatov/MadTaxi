@@ -3,6 +3,9 @@ package com.erkprog.madtaxi.ui.main;
 import android.Manifest;
 //import android.app.FragmentManager;
 import android.app.Dialog;
+import android.content.DialogInterface;
+import android.location.LocationManager;
+import android.provider.Settings;
 import android.support.v4.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,12 +14,14 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
 import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.TaxiApplication;
+import com.erkprog.madtaxi.data.LocationHelper;
 import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.TaxiCab;
 import com.erkprog.madtaxi.util.MyUtil;
@@ -51,8 +56,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
 
-    mPresenter = new MainPresenter(TaxiApplication.getInstance().getApiService());
+    mPresenter = new MainPresenter(TaxiApplication.getInstance().getApiService(), new LocationHelper(this));
     mPresenter.bind(this);
+
+    findViewById(R.id.loc).setOnClickListener(v -> {
+      if (isGpsPersmissionGranted()) {
+        if (isGpsEnabled()) {
+          mPresenter.getCurrentLocation();
+        } else {
+          showTurnGpsOnDialog();
+        }
+      } else {
+        requestGpsPermission();
+      }
+    });
 
     findViewById(R.id.search).setOnClickListener(v -> {
       LatLng centerMap = mMap.getCameraPosition().target;
@@ -67,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng bishkek = new LatLng(42.88, 74.58);
     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 13));
     mPresenter.loadData(bishkek.latitude, bishkek.longitude);
+    mPresenter.getCurrentLocation();
   }
 
   private void setUpGoogleMap() {
@@ -109,10 +127,73 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Snackbar.make(findViewById(R.id.map), message, Snackbar.LENGTH_LONG).show();
   }
 
+
+  @Override
+  public void makeAnOrderUsingSms(String smsNum) {
+    Uri uriSms = Uri.parse("smsto:" + smsNum);
+    Intent intentSMS = new Intent(Intent.ACTION_SENDTO, uriSms);
+    intentSMS.putExtra("sms_body", "");
+    if (intentSMS.resolveActivity(getPackageManager()) != null) {
+      startActivity(intentSMS);
+    }
+  }
+
+  @Override
+  public void makeAnOrderUsingPhoneCall(String phoneNumber) {
+    if (callPhonePermissionGranted()) {
+      Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + phoneNumber));
+      if (intent.resolveActivity(getPackageManager()) != null) {
+        startActivity(intent);
+      }
+    } else {
+      pendingCall = phoneNumber;
+      requestCallPhonePermission();
+    }
+  }
+
+  private boolean callPhonePermissionGranted() {
+    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void requestCallPhonePermission() {
+    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_PHONE_CALL);
+  }
+
+  private boolean isGpsEnabled() {
+    LocationManager locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+    return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+  }
+
+  private boolean isGpsPersmissionGranted() {
+    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void requestGpsPermission() {
+    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_GPS);
+  }
+
+  private void showTurnGpsOnDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this)
+        .setMessage("Turn on gps in settings")
+        .setTitle("Gps is disabled")
+        .setPositiveButton("Go to settings", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+          }
+        })
+        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            Toast.makeText(MainActivity.this, "Turn GPS on to get forecast for current location", Toast.LENGTH_SHORT).show();
+          }
+        });
+    builder.show();
+  }
+
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
     if (requestCode == REQUEST_PHONE_CALL) {
       if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
         if (pendingCall != null) {
@@ -130,38 +211,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     if (requestCode == REQUEST_GPS) {
       if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        mPresenter.getCurrentLocation();
+      } else {
+        Toast.makeText(this, "Location Permission denied", Toast.LENGTH_SHORT).show();
       }
     }
-  }
-
-  @Override
-  public void makeAnOrderUsingSms(String smsNum) {
-    Uri uriSms = Uri.parse("smsto:" + smsNum);
-    Intent intentSMS = new Intent(Intent.ACTION_SENDTO, uriSms);
-    intentSMS.putExtra("sms_body", "");
-    if (intentSMS.resolveActivity(getPackageManager()) != null) {
-      startActivity(intentSMS);
-    }
-  }
-
-  @Override
-  public void makeAnOrderUsingPhoneCall(String phoneNumber) {
-    if (callPhonePermissionGranted()) {
-        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + phoneNumber));
-      if (intent.resolveActivity(getPackageManager()) != null) {
-        startActivity(intent);
-      }
-    } else {
-      pendingCall = phoneNumber;
-      requestCallPhonePermission();
-    }
-  }
-
-  private boolean callPhonePermissionGranted() {
-    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
-  }
-
-  private void requestCallPhonePermission() {
-    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_PHONE_CALL);
   }
 }

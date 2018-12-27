@@ -26,5 +26,7 @@ public interface MainContract {
     void loadData(double lat, double lng);
 
     void onInfoWindowClicked(TaxiCab taxiCab);
+
+    void getCurrentLocation();
   }
 }

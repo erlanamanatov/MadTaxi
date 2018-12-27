@@ -2,6 +2,7 @@ package com.erkprog.madtaxi.ui.main;
 
 import android.util.Log;
 
+import com.erkprog.madtaxi.data.LocationHelper;
 import com.erkprog.madtaxi.data.api.TaxiApi;
 import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.Contact;
@@ -25,10 +26,12 @@ public class MainPresenter implements MainContract.Presenter {
 
   private MainContract.View mView;
   private TaxiApi mApiService;
+  private LocationHelper mLocationHelper;
   private CompositeDisposable mDisposable = new CompositeDisposable();
 
-  MainPresenter(TaxiApi apiService) {
+  MainPresenter(TaxiApi apiService, LocationHelper locationHelper) {
     mApiService = apiService;
+    mLocationHelper = locationHelper;
   }
 
   @Override
@@ -111,5 +114,10 @@ public class MainPresenter implements MainContract.Presenter {
   @Override
   public boolean isViewAttached() {
     return mView != null;
+  }
+
+  @Override
+  public void getCurrentLocation() {
+
   }
 }
