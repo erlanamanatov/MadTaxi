@@ -64,6 +64,11 @@ public class MainPresenter implements MainContract.Presenter {
     }
   }
 
+  @Override
+  public void onInfoWindowClicked(TaxiCab taxiCab) {
+    mView.showOrderDialog(taxiCab);
+  }
+
   private List<TaxiCab> getTaxiCabs(Company company) {
     List<TaxiCab> list = new ArrayList<>();
 

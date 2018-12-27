@@ -12,6 +12,7 @@ public interface MainContract {
 
     void displayTaxi(List<TaxiCab> taxiCabs);
 
+    void showOrderDialog(TaxiCab taxiCab);
   }
 
   interface Presenter {
@@ -24,5 +25,6 @@ public interface MainContract {
 
     void loadData(double lat, double lng);
 
+    void onInfoWindowClicked(TaxiCab taxiCab);
   }
 }

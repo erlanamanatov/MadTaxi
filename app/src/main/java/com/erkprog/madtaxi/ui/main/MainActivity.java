@@ -74,11 +74,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mMap.getUiSettings().setTiltGesturesEnabled(false);
     mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
     mMap.setOnInfoWindowClickListener(marker -> {
-
       TaxiCab taxiCab = (TaxiCab) marker.getTag();
       if (taxiCab != null) {
-        OrderDialog dialog = OrderDialog.newInstance(taxiCab.getSmsNum(), taxiCab.getPhoneNum());
-        dialog.show(getSupportFragmentManager(), "order dialog");
+        mPresenter.onInfoWindowClicked(taxiCab);
       }
     });
   }
@@ -86,13 +84,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void displayTaxi(List<TaxiCab> taxiCabs) {
     mMap.clear();
-
     for (TaxiCab taxi : taxiCabs) {
       int logoRes = MyUtil.getLogo(taxi.getCompanyName());
       mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng()))
           .icon(BitmapDescriptorFactory.fromResource(logoRes)))
           .setTag(taxi);
     }
+  }
+
+  @Override
+  public void showOrderDialog(TaxiCab taxiCab) {
+    OrderDialog dialog = OrderDialog.newInstance(taxiCab.getSmsNum(), taxiCab.getPhoneNum());
+    dialog.show(getSupportFragmentManager(), "order dialog");
   }
 
   @Override
@@ -104,14 +107,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void showMessage(String message) {
     Snackbar.make(findViewById(R.id.map), message, Snackbar.LENGTH_LONG).show();
-  }
-
-  private boolean callPhonePermissionGranted() {
-    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
-  }
-
-  private void requestCallPhonePermission() {
-    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_PHONE_CALL);
   }
 
   @Override
@@ -160,5 +155,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       pendingCall = phoneNumber;
       requestCallPhonePermission();
     }
+  }
+
+  private boolean callPhonePermissionGranted() {
+    return ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void requestCallPhonePermission() {
+    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_PHONE_CALL);
   }
 }
