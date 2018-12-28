@@ -1,7 +1,6 @@
 package com.erkprog.madtaxi.ui.main;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.location.Location;
 import android.location.LocationManager;
 import android.provider.Settings;
@@ -24,6 +23,7 @@ import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.TaxiApplication;
 import com.erkprog.madtaxi.data.LocationHelper;
 import com.erkprog.madtaxi.data.entity.TaxiCab;
+import com.erkprog.madtaxi.data.entity.TaxiClusterItem;
 import com.erkprog.madtaxi.util.MyUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -31,7 +31,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import java.util.List;
 
@@ -48,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   ImageView getLocationIcon;
   ProgressBar gpsProgressBar;
   TextView gpsInfoText;
+  private ClusterManager<TaxiClusterItem> mClusterManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -62,19 +66,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   public void onMapReady(GoogleMap googleMap) {
     mMap = googleMap;
     setUpGoogleMap();
+
+    mClusterManager = new ClusterManager<>(this, mMap);
+    mClusterManager.setRenderer(new TaxiRenderer());
+    mMap.setOnCameraIdleListener(mClusterManager);
+    mMap.setOnMarkerClickListener(mClusterManager);
+    mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
+    mClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
+
     LatLng bishkek = new LatLng(42.88, 74.58);
-    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 13));
+    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 14));
     mPresenter.loadData(bishkek.latitude, bishkek.longitude);
   }
 
   private void setUpGoogleMap() {
     mMap.getUiSettings().setRotateGesturesEnabled(false);
     mMap.getUiSettings().setTiltGesturesEnabled(false);
-    mMap.setInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
-    mMap.setOnMarkerClickListener(marker -> {
-      marker.showInfoWindow();
-      return true;
-    });
     mMap.setOnInfoWindowClickListener(marker -> {
       TaxiCab taxiCab = (TaxiCab) marker.getTag();
       if (taxiCab != null) {
@@ -86,17 +93,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void displayNearistTaxiCabs(List<TaxiCab> taxiCabs) {
     mMap.clear();
+    mClusterManager.clearItems();
     for (TaxiCab taxi : taxiCabs) {
-      int logoRes = MyUtil.getLogo(taxi.getCompanyName());
-      mMap.addMarker(new MarkerOptions().position(new LatLng(taxi.getLat(), taxi.getLng()))
-          .icon(BitmapDescriptorFactory.fromResource(logoRes)))
-          .setTag(taxi);
+      TaxiClusterItem item = new TaxiClusterItem(taxi);
+      mClusterManager.addItem(item);
     }
+    mClusterManager.cluster();
   }
 
   @Override
   public void centerMapToLocation(Location location) {
-    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
+    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 14));
   }
 
   @Override
@@ -181,18 +188,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     AlertDialog.Builder builder = new AlertDialog.Builder(this)
         .setMessage("Turn on gps in settings")
         .setTitle("Gps is disabled")
-        .setPositiveButton("Go to settings", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-          }
-        })
-        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-          @Override
-          public void onClick(DialogInterface dialog, int which) {
-            Toast.makeText(MainActivity.this, "Turn GPS on to get forecast for current location", Toast.LENGTH_SHORT).show();
-          }
-        });
+        .setPositiveButton("Go to settings", (dialog, which) -> startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+        .setNegativeButton("Cancel", (dialog, which) -> Toast.makeText(MainActivity.this, "Turn GPS on to get forecast for current location", Toast.LENGTH_SHORT).show());
     builder.show();
   }
 
@@ -249,5 +246,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       LatLng centerMap = mMap.getCameraPosition().target;
       mPresenter.loadData(centerMap.latitude, centerMap.longitude);
     });
+  }
+
+  private class TaxiRenderer extends DefaultClusterRenderer<TaxiClusterItem> {
+
+    TaxiRenderer() {
+      super(getApplicationContext(), mMap, mClusterManager);
+    }
+
+    @Override
+    protected void onBeforeClusterItemRendered(TaxiClusterItem item, MarkerOptions markerOptions) {
+      int logoRes = MyUtil.getLogo(item.getTaxiCab().getCompanyName());
+      markerOptions.icon(BitmapDescriptorFactory.fromResource(logoRes));
+    }
+
+    @Override
+    protected void onClusterItemRendered(TaxiClusterItem clusterItem, Marker marker) {
+      super.onClusterItemRendered(clusterItem, marker);
+      marker.setTag(clusterItem.getTaxiCab());
+    }
   }
 }
