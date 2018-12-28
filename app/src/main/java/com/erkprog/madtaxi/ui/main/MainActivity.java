@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   private MainContract.Presenter mPresenter;
   ImageView getLocationIcon;
   ProgressBar gpsProgressBar;
-  TextView gpsInfoText;
+  TextView gpsInfoText, tvAddress;
   private ClusterManager<TaxiClusterItem> mClusterManager;
 
   @Override
@@ -69,7 +69,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     mClusterManager = new ClusterManager<>(this, mMap);
     mClusterManager.setRenderer(new TaxiRenderer());
-    mMap.setOnCameraIdleListener(mClusterManager);
+    mMap.setOnCameraIdleListener(() -> {
+      LatLng center = mMap.getCameraPosition().target;
+      mPresenter.getAddress(center.latitude, center.longitude);
+      mClusterManager.onCameraIdle();
+    });
+    mMap.setOnCameraMoveStartedListener(i -> tvAddress.setText(""));
     mMap.setOnMarkerClickListener(mClusterManager);
     mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
     mClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
@@ -120,6 +125,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     getLocationIcon.setEnabled(true);
     gpsProgressBar.setVisibility(View.GONE);
     gpsInfoText.setVisibility(View.GONE);
+  }
+
+  @Override
+  public void showAddress(String s) {
+    tvAddress.setText(s);
   }
 
   @Override
@@ -240,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     gpsProgressBar = findViewById(R.id.main_gps_progress);
     gpsInfoText = findViewById(R.id.main_gps_textinfo);
+    tvAddress = findViewById(R.id.address);
     setIconsDefaultState();
 
     findViewById(R.id.search).setOnClickListener(v -> {

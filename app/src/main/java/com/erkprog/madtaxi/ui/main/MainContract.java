@@ -22,6 +22,7 @@ public interface MainContract {
 
     void setIconsDefaultState();
 
+    void showAddress(String s);
   }
 
   interface Presenter {
@@ -37,5 +38,7 @@ public interface MainContract {
     void onInfoWindowClicked(TaxiCab taxiCab);
 
     void getCurrentLocation();
+
+    void getAddress(double lat, double lng);
   }
 }

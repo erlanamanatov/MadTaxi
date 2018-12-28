@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -37,6 +38,8 @@ public class MainPresenter implements MainContract.Presenter {
   @Override
   public void loadData(double lat, double lng) {
     mDisposable.clear();
+
+    getAddress(lat, lng);
 
     if (mApiService != null) {
       /**
@@ -98,6 +101,24 @@ public class MainPresenter implements MainContract.Presenter {
       list.add(new TaxiCab(companyName, smsNum, tel, driver.getLat(), driver.getLon()));
     }
     return list;
+  }
+
+  @Override
+  public void getAddress(double lat, double lng) {
+    mDisposable.add(Single.fromCallable(() -> mLocationHelper.getAddress(lat, lng)).subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribeWith(new DisposableSingleObserver<String>() {
+          @Override
+          public void onSuccess(String s) {
+            if (isViewAttached()) {
+              mView.showAddress(s);
+            }
+          }
+          @Override
+          public void onError(Throwable e) {
+            mView.showAddress("");
+          }
+        }));
   }
 
   @Override
