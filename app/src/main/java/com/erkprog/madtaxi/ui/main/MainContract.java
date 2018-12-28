@@ -17,6 +17,11 @@ public interface MainContract {
     void showOrderDialog(TaxiCab taxiCab);
 
     void centerMapToLocation(Location location);
+
+    void onGettingLocation();
+
+    void setIconsDefaultState();
+
   }
 
   interface Presenter {

@@ -3,4 +3,5 @@
   <string name="title_activity_maps">Map</string>
   <string name="search">Search</string>
   <string name="order_a_taxi">Order a taxi</string>
+  <string name="getting_gps_data">Getting gps data...</string>
 </resources>

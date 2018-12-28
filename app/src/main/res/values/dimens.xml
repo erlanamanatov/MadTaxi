@@ -2,4 +2,5 @@
 <resources>
   <dimen name="logo_size">16dp</dimen>
   <dimen name="order_icon_size">40dp</dimen>
+  <dimen name="gps_loading_progress_size">18dp</dimen>
 </resources>

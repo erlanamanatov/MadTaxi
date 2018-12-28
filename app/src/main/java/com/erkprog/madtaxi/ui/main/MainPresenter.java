@@ -118,8 +118,10 @@ public class MainPresenter implements MainContract.Presenter {
 
   @Override
   public void getCurrentLocation() {
+    mView.onGettingLocation();
     mLocationHelper.getLocation(location -> {
       if (isViewAttached()) {
+        mView.setIconsDefaultState();
         mView.centerMapToLocation(location);
         loadData(location.getLatitude(), location.getLongitude());
       }

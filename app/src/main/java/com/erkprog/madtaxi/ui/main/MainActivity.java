@@ -14,6 +14,10 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.erkprog.madtaxi.R;
@@ -41,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
   private GoogleMap mMap;
   private MainContract.Presenter mPresenter;
+  ImageView getLocationIcon;
+  ProgressBar gpsProgressBar;
+  TextView gpsInfoText;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +97,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   @Override
   public void centerMapToLocation(Location location) {
     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 13));
+  }
+
+  @Override
+  public void onGettingLocation() {
+    getLocationIcon.setVisibility(View.INVISIBLE);
+    getLocationIcon.setEnabled(false);
+    gpsProgressBar.setVisibility(View.VISIBLE);
+    gpsInfoText.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void setIconsDefaultState() {
+    getLocationIcon.setVisibility(View.VISIBLE);
+    getLocationIcon.setEnabled(true);
+    gpsProgressBar.setVisibility(View.GONE);
+    gpsInfoText.setVisibility(View.GONE);
   }
 
   @Override
@@ -205,7 +228,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         .findFragmentById(R.id.map);
     mapFragment.getMapAsync(this);
 
-    findViewById(R.id.loc).setOnClickListener(v -> {
+    getLocationIcon = findViewById(R.id.get_location_img);
+    getLocationIcon.setOnClickListener(v -> {
       if (isGpsPersmissionGranted()) {
         if (isGpsEnabled()) {
           mPresenter.getCurrentLocation();
@@ -216,6 +240,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         requestGpsPermission();
       }
     });
+
+    gpsProgressBar = findViewById(R.id.main_gps_progress);
+    gpsInfoText = findViewById(R.id.main_gps_textinfo);
+    setIconsDefaultState();
 
     findViewById(R.id.search).setOnClickListener(v -> {
       LatLng centerMap = mMap.getCameraPosition().target;
