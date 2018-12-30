@@ -110,15 +110,17 @@ public class MainPresenter implements MainContract.Presenter {
         .observeOn(AndroidSchedulers.mainThread())
         .subscribeWith(new DisposableSingleObserver<String>() {
           @Override
-          public void onSuccess(String s) {
+          public void onSuccess(String address) {
             if (isViewAttached()) {
-              mView.showAddress(s);
+              mView.showAddress(address);
             }
           }
 
           @Override
           public void onError(Throwable e) {
-            mView.showAddress("");
+            if (isViewAttached()) {
+              mView.showAddress("");
+            }
           }
         }));
   }

@@ -1,8 +1,6 @@
 package com.erkprog.madtaxi.ui.main;
 
-import android.location.Location;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.data.LocationHelper;
@@ -11,19 +9,16 @@ import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.Contact;
 import com.erkprog.madtaxi.data.entity.Driver;
 import com.erkprog.madtaxi.data.entity.TaxiResponse;
-import com.erkprog.madtaxi.util.MyUtil;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -36,11 +31,9 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.schedulers.ExecutorScheduler;
 import io.reactivex.plugins.RxJavaPlugins;
 
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,16 +84,23 @@ public class MainPresenterTest {
   }
 
   @Test
-  public void loadData_WhenOnSuccessResponseAndViewIsAttached_ShouldDisplayTaxi() throws IOException {
+  public void loadData_WhenOnSuccessResponseAndViewIsAttached_ShouldDisplayTaxiItems() throws IOException {
     String resultAddress = "some address";
     when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(resultAddress);
-    TaxiResponse response = getFakeTaxiResponse();
     when(taxiApi.getNearistTaxi(anyDouble(), anyDouble())).thenReturn(Observable.just(getFakeTaxiResponse()));
     presenter.loadData(123.12, 123.42);
     verify(view).displayNearistTaxiCabs(any());
   }
 
-
+  @Test
+  public void loadData_WhenOnSuccessResponseAndViewIsNotAttached_ShouldNotDisplayAnything() throws IOException {
+    String resultAddress = "some address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(resultAddress);
+    when(taxiApi.getNearistTaxi(anyDouble(), anyDouble())).thenReturn(Observable.just(getFakeTaxiResponse()));
+    presenter.unbind();
+    presenter.loadData(123.12, 123.42);
+    verify(view, never()).displayNearistTaxiCabs(any());
+  }
 
   @Test
   public void loadData_WhenCompaniesInResponseNull_ShouldShowErrorMessage() throws IOException {
@@ -119,6 +119,23 @@ public class MainPresenterTest {
     presenter.unbind();
     presenter.loadData(123.12, 123.42);
     verify(view, never()).showMessage(anyInt());
+  }
+
+  @Test
+  public void getAddress_WhenOnSuccessAndViewIsAttached_ShouldShowAddress() throws IOException {
+    String address = "123 address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(address);
+    presenter.getAddress(123.123, 123.123);
+    verify(view).showAddress(address);
+  }
+
+  @Test
+  public void getAddress_WhenOnSuccessAndViewIsNotAttached_ShouldNowShowAny() throws IOException {
+    String address = "123 address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(address);
+    presenter.unbind();
+    presenter.getAddress(123.123, 123.123);
+    verify(view, never()).showAddress(address);
   }
 
   private TaxiResponse getFakeTaxiResponse() {
