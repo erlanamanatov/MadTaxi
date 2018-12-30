@@ -142,10 +142,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  public void showMessage(String message) {
-    Snackbar.make(findViewById(R.id.map), message, Snackbar.LENGTH_LONG).show();
+  public void showMessage(int resId) {
+    Snackbar.make(findViewById(R.id.map), getString(R.string.error_loading_data), Snackbar.LENGTH_LONG).show();
   }
-
 
   @Override
   public void makeAnOrderUsingSms(String smsNum) {

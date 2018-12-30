@@ -4,4 +4,5 @@
   <string name="search">Search</string>
   <string name="order_a_taxi">Order a taxi</string>
   <string name="getting_gps_data">Getting gps data...</string>
+  <string name="error_loading_data">Error loading data from server</string>
 </resources>

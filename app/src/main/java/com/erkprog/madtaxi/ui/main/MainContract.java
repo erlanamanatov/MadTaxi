@@ -11,7 +11,7 @@ public interface MainContract {
 
   interface View {
 
-    void showMessage(String message);
+    void showMessage(int resId);
 
     void displayNearistTaxiCabs(List<TaxiClusterItem> taxiItems);
 

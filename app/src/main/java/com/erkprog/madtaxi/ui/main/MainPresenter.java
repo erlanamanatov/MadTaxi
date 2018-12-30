@@ -1,5 +1,6 @@
 package com.erkprog.madtaxi.ui.main;
 
+import com.erkprog.madtaxi.R;
 import com.erkprog.madtaxi.data.LocationHelper;
 import com.erkprog.madtaxi.data.api.TaxiApi;
 import com.erkprog.madtaxi.data.entity.Company;
@@ -69,7 +70,7 @@ public class MainPresenter implements MainContract.Presenter {
         @Override
         public void onError(Throwable e) {
           if (isViewAttached()) {
-            mView.showMessage("Can not load nearist taxicabs." + e.getMessage());
+            mView.showMessage(R.string.error_loading_data);
           }
           MyUtil.logd(TAG, "Loading taxi cabs error " + e.getMessage());
         }
