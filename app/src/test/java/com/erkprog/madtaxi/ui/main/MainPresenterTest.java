@@ -1,0 +1,154 @@
+package com.erkprog.madtaxi.ui.main;
+
+import android.location.Location;
+import android.support.annotation.NonNull;
+import android.util.Log;
+
+import com.erkprog.madtaxi.R;
+import com.erkprog.madtaxi.data.LocationHelper;
+import com.erkprog.madtaxi.data.api.TaxiApi;
+import com.erkprog.madtaxi.data.entity.Company;
+import com.erkprog.madtaxi.data.entity.Contact;
+import com.erkprog.madtaxi.data.entity.Driver;
+import com.erkprog.madtaxi.data.entity.TaxiResponse;
+import com.erkprog.madtaxi.util.MyUtil;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.android.plugins.RxAndroidPlugins;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.internal.schedulers.ExecutorScheduler;
+import io.reactivex.plugins.RxJavaPlugins;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyDouble;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+public class MainPresenterTest {
+
+  @Rule
+  public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Mock
+  MainContract.View view;
+
+  @Mock
+  TaxiApi taxiApi;
+
+  @Mock
+  LocationHelper locationHelper;
+  MainPresenter presenter;
+
+  private static String TAG = "Testing";
+
+  @Before
+  public void setUp() {
+    presenter = new MainPresenter(taxiApi, locationHelper);
+    presenter.bind(view);
+  }
+
+  @BeforeClass
+  public static void setUpRxSchedulers() {
+    Scheduler immediate = new Scheduler() {
+      @Override
+      public Disposable scheduleDirect(@NonNull Runnable run, long delay, @NonNull TimeUnit unit) {
+        // this prevents StackOverflowErrors when scheduling with a delay
+        return super.scheduleDirect(run, 0, unit);
+      }
+
+      @Override
+      public Scheduler.Worker createWorker() {
+        return new ExecutorScheduler.ExecutorWorker(Runnable::run);
+      }
+    };
+
+    RxJavaPlugins.setInitIoSchedulerHandler(scheduler -> immediate);
+    RxJavaPlugins.setInitComputationSchedulerHandler(scheduler -> immediate);
+    RxJavaPlugins.setInitNewThreadSchedulerHandler(scheduler -> immediate);
+    RxJavaPlugins.setInitSingleSchedulerHandler(scheduler -> immediate);
+    RxAndroidPlugins.setInitMainThreadSchedulerHandler(scheduler -> immediate);
+  }
+
+  @Test
+  public void loadData_WhenOnSuccessResponseAndViewIsAttached_ShouldDisplayTaxi() throws IOException {
+    String resultAddress = "some address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(resultAddress);
+    TaxiResponse response = getFakeTaxiResponse();
+    when(taxiApi.getNearistTaxi(anyDouble(), anyDouble())).thenReturn(Observable.just(getFakeTaxiResponse()));
+    presenter.loadData(123.12, 123.42);
+    verify(view).displayNearistTaxiCabs(any());
+  }
+
+
+
+  @Test
+  public void loadData_WhenCompaniesInResponseNull_ShouldShowErrorMessage() throws IOException {
+    String resultAddress = "some address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(resultAddress);
+    when(taxiApi.getNearistTaxi(anyDouble(), anyDouble())).thenReturn(Observable.just(new TaxiResponse()));
+    presenter.loadData(123.12, 123.42);
+    verify(view).showMessage(R.string.error_loading_data);
+  }
+
+  @Test
+  public void loadData_WhenOnErrorAndViewIsNotAttached_ShouldNotShowAnyMessage() throws IOException {
+    String resultAddress = "some address";
+    when(locationHelper.getAddress(anyDouble(), anyDouble())).thenReturn(resultAddress);
+    when(taxiApi.getNearistTaxi(anyDouble(), anyDouble())).thenReturn(Observable.just(new TaxiResponse()));
+    presenter.unbind();
+    presenter.loadData(123.12, 123.42);
+    verify(view, never()).showMessage(anyInt());
+  }
+
+  private TaxiResponse getFakeTaxiResponse() {
+    TaxiResponse response = new TaxiResponse();
+    Company company = getFakeCompany();
+    List<Company> companyList = Arrays.asList(company);
+    response.setCompanies(companyList);
+    return response;
+  }
+
+  private Company getFakeCompany() {
+    Company company = new Company();
+    company.setName("namba");
+    company.setContacts(Arrays.asList(getFakeContact()));
+    company.setDrivers(Arrays.asList(getFakeDriver(), getFakeDriver(), getFakeDriver()));
+    return company;
+  }
+
+  private Driver getFakeDriver() {
+    Driver driver = new Driver();
+    driver.setLat(new Random().nextDouble());
+    driver.setLon(new Random().nextDouble());
+    return driver;
+  }
+
+  private Contact getFakeContact() {
+    Contact contact = new Contact();
+    contact.setType("sms");
+    contact.setContact("123");
+    return contact;
+  }
+
+}
