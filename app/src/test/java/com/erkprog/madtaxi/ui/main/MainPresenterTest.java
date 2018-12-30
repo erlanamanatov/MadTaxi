@@ -1,5 +1,6 @@
 package com.erkprog.madtaxi.ui.main;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 
 import com.erkprog.madtaxi.R;
@@ -14,6 +15,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -34,7 +36,11 @@ import io.reactivex.plugins.RxJavaPlugins;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -138,6 +144,39 @@ public class MainPresenterTest {
     verify(view, never()).showAddress(address);
   }
 
+  @Test
+  public void getCurrentLocation_WhenOnLocationChangedAndViewIsAttached_ShouldCenterMapToLocation() {
+    ArgumentCaptor<LocationHelper.OnLocationChangedListener> locationChangedListenerArgumentCaptor = ArgumentCaptor.forClass(LocationHelper
+        .OnLocationChangedListener.class);
+    MainPresenter spy = spy(new MainPresenter(taxiApi, locationHelper));
+    spy.bind(view);
+    doNothing().when(spy).loadData(anyDouble(), anyDouble());
+
+    spy.getCurrentLocation();
+    Location location = mock(Location.class);
+    verify(view).onGettingLocation();
+    verify(locationHelper, times(1)).getLocation(locationChangedListenerArgumentCaptor.capture());
+    locationChangedListenerArgumentCaptor.getValue().onLocationChanged(location);
+    verify(view).setIconsDefaultState();
+    verify(view).centerMapToLocation(location);
+  }
+
+  @Test
+  public void getCurrentLocation_WhenOnLocationChangedAndViewIsNotAttached() {
+    ArgumentCaptor<LocationHelper.OnLocationChangedListener> locationChangedListenerArgumentCaptor = ArgumentCaptor.forClass(LocationHelper
+        .OnLocationChangedListener.class);
+    MainPresenter spy = spy(new MainPresenter(taxiApi, locationHelper));
+    Location location = mock(Location.class);
+    spy.bind(view);
+    spy.getCurrentLocation();
+    spy.unbind();
+    verify(view).onGettingLocation();
+    verify(locationHelper, times(1)).getLocation(locationChangedListenerArgumentCaptor.capture());
+    locationChangedListenerArgumentCaptor.getValue().onLocationChanged(location);
+    verify(view, never()).setIconsDefaultState();
+    verify(view, never()).centerMapToLocation(location);
+  }
+
   private TaxiResponse getFakeTaxiResponse() {
     TaxiResponse response = new TaxiResponse();
     Company company = getFakeCompany();
@@ -167,5 +206,4 @@ public class MainPresenterTest {
     contact.setContact("123");
     return contact;
   }
-
 }
