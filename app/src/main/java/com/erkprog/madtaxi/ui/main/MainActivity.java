@@ -96,13 +96,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  public void displayNearistTaxiCabs(List<TaxiCab> taxiCabs) {
+  public void displayNearistTaxiCabs(List<TaxiClusterItem> taxiItems) {
     mMap.clear();
     mClusterManager.clearItems();
-    for (TaxiCab taxi : taxiCabs) {
-      TaxiClusterItem item = new TaxiClusterItem(taxi);
-      mClusterManager.addItem(item);
-    }
+    mClusterManager.addItems(taxiItems);
     mClusterManager.cluster();
   }
 

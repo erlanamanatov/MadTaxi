@@ -3,6 +3,7 @@ package com.erkprog.madtaxi.ui.main;
 import android.location.Location;
 
 import com.erkprog.madtaxi.data.entity.TaxiCab;
+import com.erkprog.madtaxi.data.entity.TaxiClusterItem;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface MainContract {
 
     void showMessage(String message);
 
-    void displayNearistTaxiCabs(List<TaxiCab> taxiCabs);
+    void displayNearistTaxiCabs(List<TaxiClusterItem> taxiItems);
 
     void showOrderDialog(TaxiCab taxiCab);
 

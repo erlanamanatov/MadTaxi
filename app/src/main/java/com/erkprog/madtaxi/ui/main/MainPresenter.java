@@ -1,20 +1,18 @@
 package com.erkprog.madtaxi.ui.main;
 
-import android.util.Log;
-
 import com.erkprog.madtaxi.data.LocationHelper;
 import com.erkprog.madtaxi.data.api.TaxiApi;
 import com.erkprog.madtaxi.data.entity.Company;
 import com.erkprog.madtaxi.data.entity.Contact;
 import com.erkprog.madtaxi.data.entity.Driver;
 import com.erkprog.madtaxi.data.entity.TaxiCab;
+import com.erkprog.madtaxi.data.entity.TaxiClusterItem;
 import com.erkprog.madtaxi.util.MyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -47,22 +45,24 @@ public class MainPresenter implements MainContract.Presenter {
        * flatMap is used to get observable companies from taxiResponse
        * after that flatMap is used to get observable taxiCabs from companies
        * @see #getTaxiCabs(Company)
-       * toList operator is used to return all taxiCabs in one list
+       * map operator is used to transform TaxiCab objects into TaxiClusterItem objects
+       * toList operator is used to return all taxiClusterItems in one list
        */
-      Single<List<TaxiCab>> taxiObs = mApiService.getNearistTaxi(lat, lng)
+      Single<List<TaxiClusterItem>> taxiObs = mApiService.getNearistTaxi(lat, lng)
           .flatMap(taxiResponse -> Observable.fromIterable(taxiResponse.getCompanies()))
           .flatMap(company -> Observable.fromIterable(getTaxiCabs(company)))
+          .map(TaxiClusterItem::new)
           .subscribeOn(Schedulers.io())
-          .doOnNext(taxiCab -> MyUtil.logd(TAG, "taxi cab onNext(): " + taxiCab.toString()))
+          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
           .toList()
           .observeOn(AndroidSchedulers.mainThread());
 
-      mDisposable.add(taxiObs.subscribeWith(new DisposableSingleObserver<List<TaxiCab>>() {
+      mDisposable.add(taxiObs.subscribeWith(new DisposableSingleObserver<List<TaxiClusterItem>>() {
         @Override
-        public void onSuccess(List<TaxiCab> taxiCabs) {
+        public void onSuccess(List<TaxiClusterItem> taxiItems) {
           if (isViewAttached()) {
-            MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiCabs.size());
-            mView.displayNearistTaxiCabs(taxiCabs);
+            MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiItems.size());
+            mView.displayNearistTaxiCabs(taxiItems);
           }
         }
 
@@ -114,6 +114,7 @@ public class MainPresenter implements MainContract.Presenter {
               mView.showAddress(s);
             }
           }
+
           @Override
           public void onError(Throwable e) {
             mView.showAddress("");
