@@ -28,6 +28,7 @@ public class MainPresenter implements MainContract.Presenter {
   private LocationHelper mLocationHelper;
   private CompositeDisposable mDisposable = new CompositeDisposable();
   private List<TaxiClusterItem> taxiList;
+  private boolean onGettingLocation = false;
 
   MainPresenter(TaxiApi apiService, LocationHelper locationHelper) {
     mApiService = apiService;
@@ -143,9 +144,11 @@ public class MainPresenter implements MainContract.Presenter {
   @Override
   public void getCurrentLocation() {
     mView.onGettingLocation();
+    onGettingLocation = true;
     mLocationHelper.getLocation(location -> {
       if (isViewAttached()) {
         mView.setIconsDefaultState();
+        onGettingLocation = false;
         mView.centerMapToLocation(location);
         loadData(location.getLatitude(), location.getLongitude());
       }
@@ -156,6 +159,9 @@ public class MainPresenter implements MainContract.Presenter {
   public void onMapReady() {
     if (taxiList != null) {
       mView.displayNearistTaxiCabs(taxiList);
+    }
+    if (onGettingLocation) {
+      mView.onGettingLocation();
     }
   }
 }
