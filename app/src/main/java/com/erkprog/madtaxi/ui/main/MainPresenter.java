@@ -129,7 +129,7 @@ public class MainPresenter implements MainContract.Presenter {
 
   @Override
   public void unbind() {
-    mDisposable.dispose();
+//    mDisposable.dispose();
     mView = null;
   }
 
