@@ -75,18 +75,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mapFragment.getMapAsync(this);
   }
 
+  private void init() {
+    getLocationIcon = findViewById(R.id.get_location_img);
+    getLocationIcon.setOnClickListener(v -> {
+      if (isGpsPersmissionGranted()) {
+        if (isGpsEnabled()) {
+          mPresenter.getCurrentLocation();
+        } else {
+          showTurnGpsOnDialog();
+        }
+      } else {
+        requestGpsPermission();
+      }
+    });
+
+    gpsProgressBar = findViewById(R.id.main_gps_progress);
+    gpsInfoText = findViewById(R.id.main_gps_textinfo);
+    tvAddress = findViewById(R.id.address);
+    onLocationFound();
+
+    findViewById(R.id.search).setOnClickListener(v -> {
+      LatLng centerMap = mMap.getCameraPosition().target;
+      mPresenter.loadData(centerMap.latitude, centerMap.longitude);
+    });
+  }
+
   private void attachPresenter() {
     mPresenter = (MainContract.Presenter) getLastCustomNonConfigurationInstance();
     if (mPresenter == null) {
       mPresenter = new MainPresenter(TaxiApplication.getInstance().getApiService(), new LocationHelper(this));
     }
     mPresenter.bind(this);
-    MyUtil.logd(TAG, mPresenter.toString());
   }
 
   @Override
   public void onMapReady(GoogleMap googleMap) {
-    MyUtil.logd(TAG, "onMapReady");
     mMap = googleMap;
     setUpGoogleMap();
     mPresenter.onMapReady();
@@ -115,22 +138,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     mClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MarkerInfoWindowAdapter(this));
 
     if (currentLocation == null) {
+      // Acitivity created, savedInstance is null
       LatLng bishkek = new LatLng(42.88, 74.58);
       currentLocation = bishkek;
       mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 14));
       mPresenter.loadData(bishkek.latitude, bishkek.longitude);
     } else {
+      // On screen rotation, location and zoom from savedInstance
       mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, currentZoom));
-    }
-  }
-
-  @Override
-  protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    if (currentLocation != null) {
-      outState.putDouble(CURRENT_LAT, currentLocation.latitude);
-      outState.putDouble(CURRENT_LNG, currentLocation.longitude);
-      outState.putFloat(CURRENT_ZOOM, mMap.getCameraPosition().zoom);
     }
   }
 
@@ -156,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  public void setIconsDefaultState() {
+  public void onLocationFound() {
     getLocationIcon.setVisibility(View.VISIBLE);
     getLocationIcon.setEnabled(true);
     gpsProgressBar.setVisibility(View.GONE);
@@ -164,8 +179,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  public void showAddress(String s) {
-    tvAddress.setText(s);
+  public void showAddress(String address) {
+    tvAddress.setText(address);
   }
 
   @Override
@@ -175,14 +190,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   }
 
   @Override
-  protected void onDestroy() {
-    super.onDestroy();
-    mPresenter.unbind();
-  }
-
-  @Override
   public void showMessage(int resId) {
-    Snackbar.make(findViewById(R.id.map), getString(R.string.error_loading_data), Snackbar.LENGTH_LONG).show();
+    Snackbar.make(findViewById(R.id.map), getString(resId), Snackbar.LENGTH_LONG).show();
   }
 
   @Override
@@ -270,29 +279,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     return mPresenter;
   }
 
-  private void init() {
-    getLocationIcon = findViewById(R.id.get_location_img);
-    getLocationIcon.setOnClickListener(v -> {
-      if (isGpsPersmissionGranted()) {
-        if (isGpsEnabled()) {
-          mPresenter.getCurrentLocation();
-        } else {
-          showTurnGpsOnDialog();
-        }
-      } else {
-        requestGpsPermission();
-      }
-    });
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    if (currentLocation != null) {
+      outState.putDouble(CURRENT_LAT, currentLocation.latitude);
+      outState.putDouble(CURRENT_LNG, currentLocation.longitude);
+      outState.putFloat(CURRENT_ZOOM, mMap.getCameraPosition().zoom);
+    }
+  }
 
-    gpsProgressBar = findViewById(R.id.main_gps_progress);
-    gpsInfoText = findViewById(R.id.main_gps_textinfo);
-    tvAddress = findViewById(R.id.address);
-    setIconsDefaultState();
-
-    findViewById(R.id.search).setOnClickListener(v -> {
-      LatLng centerMap = mMap.getCameraPosition().target;
-      mPresenter.loadData(centerMap.latitude, centerMap.longitude);
-    });
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    mPresenter.unbind();
   }
 
   private class TaxiRenderer extends DefaultClusterRenderer<TaxiClusterItem> {

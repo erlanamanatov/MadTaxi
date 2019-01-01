@@ -37,6 +37,11 @@ public class MainPresenter implements MainContract.Presenter {
   }
 
   @Override
+  public void bind(MainContract.View view) {
+    this.mView = view;
+  }
+
+  @Override
   public void loadData(double lat, double lng) {
     mDisposable.clear();
 
@@ -56,7 +61,6 @@ public class MainPresenter implements MainContract.Presenter {
           .flatMap(company -> Observable.fromIterable(getTaxiCabs(company)))
           .map(TaxiClusterItem::new)
           .subscribeOn(Schedulers.io())
-//          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
           .toList()
           .observeOn(AndroidSchedulers.mainThread());
 
@@ -87,27 +91,6 @@ public class MainPresenter implements MainContract.Presenter {
     mView.showOrderDialog(taxiCab);
   }
 
-  private List<TaxiCab> getTaxiCabs(Company company) {
-    List<TaxiCab> list = new ArrayList<>();
-
-    String tel = "";
-    String smsNum = "";
-    String companyName = company.getName();
-    for (Contact contact : company.getContacts()) {
-      if (contact.getType().equals(Contact.TYPE_SMS)) {
-        smsNum = contact.getContact();
-      }
-      if (contact.getType().equals(Contact.TYPE_PHONE)) {
-        tel = contact.getContact();
-      }
-    }
-
-    for (Driver driver : company.getDrivers()) {
-      list.add(new TaxiCab(companyName, smsNum, tel, driver.getLat(), driver.getLon()));
-    }
-    return list;
-  }
-
   @Override
   public void getAddress(double lat, double lng) {
     mDisposable.add(Single.fromCallable(() -> mLocationHelper.getAddress(lat, lng)).subscribeOn(Schedulers.io())
@@ -132,16 +115,6 @@ public class MainPresenter implements MainContract.Presenter {
   }
 
   @Override
-  public void bind(MainContract.View view) {
-    this.mView = view;
-  }
-
-  @Override
-  public void unbind() {
-    mView = null;
-  }
-
-  @Override
   public boolean isViewAttached() {
     return mView != null;
   }
@@ -152,7 +125,7 @@ public class MainPresenter implements MainContract.Presenter {
     onGettingLocation = true;
     mLocationHelper.getLocation(location -> {
       if (isViewAttached()) {
-        mView.setIconsDefaultState();
+        mView.onLocationFound();
         onGettingLocation = false;
         mView.centerMapToLocation(location);
         loadData(location.getLatitude(), location.getLongitude());
@@ -168,5 +141,31 @@ public class MainPresenter implements MainContract.Presenter {
     if (onGettingLocation) {
       mView.onGettingLocation();
     }
+  }
+
+  private List<TaxiCab> getTaxiCabs(Company company) {
+    List<TaxiCab> list = new ArrayList<>();
+
+    String tel = "";
+    String smsNum = "";
+    String companyName = company.getName();
+    for (Contact contact : company.getContacts()) {
+      if (contact.getType().equals(Contact.TYPE_SMS)) {
+        smsNum = contact.getContact();
+      }
+      if (contact.getType().equals(Contact.TYPE_PHONE)) {
+        tel = contact.getContact();
+      }
+    }
+
+    for (Driver driver : company.getDrivers()) {
+      list.add(new TaxiCab(companyName, smsNum, tel, driver.getLat(), driver.getLon()));
+    }
+    return list;
+  }
+
+  @Override
+  public void unbind() {
+    mView = null;
   }
 }

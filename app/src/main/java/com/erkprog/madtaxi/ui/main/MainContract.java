@@ -21,9 +21,9 @@ public interface MainContract {
 
     void onGettingLocation();
 
-    void setIconsDefaultState();
+    void onLocationFound();
 
-    void showAddress(String s);
+    void showAddress(String address);
   }
 
   interface Presenter {

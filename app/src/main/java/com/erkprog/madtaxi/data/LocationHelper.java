@@ -9,6 +9,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
+import com.erkprog.madtaxi.util.MyUtil;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +79,7 @@ public class LocationHelper {
       }
       return str.toString();
     } else {
-      MyUtil.logd(TAG, "Get address error, <Geocoder is present>");
+      MyUtil.logd(TAG, "Get address error, <Geocoder is present> -> false");
       return "";
     }
   }

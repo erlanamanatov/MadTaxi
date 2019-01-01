@@ -157,7 +157,7 @@ public class MainPresenterTest {
     verify(view).onGettingLocation();
     verify(locationHelper, times(1)).getLocation(locationChangedListenerArgumentCaptor.capture());
     locationChangedListenerArgumentCaptor.getValue().onLocationChanged(location);
-    verify(view).setIconsDefaultState();
+    verify(view).onLocationFound();
     verify(view).centerMapToLocation(location);
   }
 
@@ -173,7 +173,7 @@ public class MainPresenterTest {
     verify(view).onGettingLocation();
     verify(locationHelper, times(1)).getLocation(locationChangedListenerArgumentCaptor.capture());
     locationChangedListenerArgumentCaptor.getValue().onLocationChanged(location);
-    verify(view, never()).setIconsDefaultState();
+    verify(view, never()).onLocationFound();
     verify(view, never()).centerMapToLocation(location);
   }
 
