@@ -67,8 +67,8 @@ public class LocationHelper {
   }
 
   public String getAddress(double lat, double lon) throws IOException {
-    if (mGeocoder.isPresent()) {
-      List<Address> list = mGeocoder.getFromLocation(lat, lon ,1);
+    if (Geocoder.isPresent()) {
+      List<Address> list = mGeocoder.getFromLocation(lat, lon, 1);
       Address address = list.get(0);
 
       StringBuffer str = new StringBuffer();
@@ -77,6 +77,7 @@ public class LocationHelper {
       }
       return str.toString();
     } else {
+      MyUtil.logd(TAG, "Get address error, <Geocoder is present>");
       return "";
     }
   }

@@ -28,6 +28,8 @@ public class MainPresenter implements MainContract.Presenter {
   private TaxiApi mApiService;
   private LocationHelper mLocationHelper;
   private CompositeDisposable mDisposable = new CompositeDisposable();
+  private List<TaxiClusterItem> taxiList;
+  private boolean onGettingLocation = false;
 
   MainPresenter(TaxiApi apiService, LocationHelper locationHelper) {
     mApiService = apiService;
@@ -54,7 +56,7 @@ public class MainPresenter implements MainContract.Presenter {
           .flatMap(company -> Observable.fromIterable(getTaxiCabs(company)))
           .map(TaxiClusterItem::new)
           .subscribeOn(Schedulers.io())
-          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
+//          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
           .toList()
           .observeOn(AndroidSchedulers.mainThread());
 
@@ -62,8 +64,9 @@ public class MainPresenter implements MainContract.Presenter {
         @Override
         public void onSuccess(List<TaxiClusterItem> taxiItems) {
           if (isViewAttached()) {
-            MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiItems.size());
-            mView.displayNearistTaxiCabs(taxiItems);
+            MyUtil.logd(TAG, "Data loaded successfully, taxi count   = " + taxiItems.size());
+            taxiList = taxiItems;
+            mView.displayNearistTaxiCabs(taxiList);
           }
         }
 
@@ -72,6 +75,7 @@ public class MainPresenter implements MainContract.Presenter {
           if (isViewAttached()) {
             mView.showMessage(R.string.error_loading_data);
           }
+          taxiList = null;
           MyUtil.logd(TAG, "Loading taxi cabs error " + e.getMessage());
         }
       }));
@@ -113,6 +117,7 @@ public class MainPresenter implements MainContract.Presenter {
           public void onSuccess(String address) {
             if (isViewAttached()) {
               mView.showAddress(address);
+              MyUtil.logd(TAG, "Address on success, " + address);
             }
           }
 
@@ -121,6 +126,7 @@ public class MainPresenter implements MainContract.Presenter {
             if (isViewAttached()) {
               mView.showAddress("");
             }
+            MyUtil.logd(TAG, "Address on Error");
           }
         }));
   }
@@ -132,7 +138,6 @@ public class MainPresenter implements MainContract.Presenter {
 
   @Override
   public void unbind() {
-    mDisposable.dispose();
     mView = null;
   }
 
@@ -144,12 +149,24 @@ public class MainPresenter implements MainContract.Presenter {
   @Override
   public void getCurrentLocation() {
     mView.onGettingLocation();
+    onGettingLocation = true;
     mLocationHelper.getLocation(location -> {
       if (isViewAttached()) {
         mView.setIconsDefaultState();
+        onGettingLocation = false;
         mView.centerMapToLocation(location);
         loadData(location.getLatitude(), location.getLongitude());
       }
     });
+  }
+
+  @Override
+  public void onMapReady() {
+    if (taxiList != null) {
+      mView.displayNearistTaxiCabs(taxiList);
+    }
+    if (onGettingLocation) {
+      mView.onGettingLocation();
+    }
   }
 }
