@@ -9,10 +9,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
-import com.erkprog.madtaxi.util.MyUtil;
-
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 import static android.content.Context.LOCATION_SERVICE;
 
@@ -37,10 +39,14 @@ public class LocationHelper {
   public void getLocation(final OnLocationChangedListener listener) {
 
     mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 10, new LocationListener() {
+      @SuppressLint("CheckResult")
       @Override
       public void onLocationChanged(Location location) {
-        listener.onLocationChanged(location);
-        mLocationManager.removeUpdates(this);
+        Completable.timer(1, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
+            .subscribe(() -> {
+              listener.onLocationChanged(location);
+              mLocationManager.removeUpdates(this);
+            });
       }
 
       @Override
@@ -66,10 +72,6 @@ public class LocationHelper {
       Address address = list.get(0);
 
       StringBuffer str = new StringBuffer();
-//      str.append("Name: " + address.getLocality() + "\n");
-//      str.append("Sub-Admin Areas: " + address.getSubAdminArea() + "\n");
-//      str.append("Admin area: " + address.getAdminArea() + "\n");
-
       for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
         str.append(address.getAddressLine(i)).append("\n");
       }
