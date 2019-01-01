@@ -41,5 +41,7 @@ public interface MainContract {
     void getCurrentLocation();
 
     void getAddress(double lat, double lng);
+
+    void onMapReady();
   }
 }

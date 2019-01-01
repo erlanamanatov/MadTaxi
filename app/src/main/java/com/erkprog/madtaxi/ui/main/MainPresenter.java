@@ -27,6 +27,7 @@ public class MainPresenter implements MainContract.Presenter {
   private TaxiApi mApiService;
   private LocationHelper mLocationHelper;
   private CompositeDisposable mDisposable = new CompositeDisposable();
+  private List<TaxiClusterItem> taxiList;
 
   MainPresenter(TaxiApi apiService, LocationHelper locationHelper) {
     mApiService = apiService;
@@ -62,7 +63,8 @@ public class MainPresenter implements MainContract.Presenter {
         public void onSuccess(List<TaxiClusterItem> taxiItems) {
           if (isViewAttached()) {
             MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiItems.size());
-            mView.displayNearistTaxiCabs(taxiItems);
+            taxiList = taxiItems;
+            mView.displayNearistTaxiCabs(taxiList);
           }
         }
 
@@ -71,6 +73,7 @@ public class MainPresenter implements MainContract.Presenter {
           if (isViewAttached()) {
             mView.showMessage("Can not load nearist taxicabs." + e.getMessage());
           }
+          taxiList = null;
           MyUtil.logd(TAG, "Loading taxi cabs error " + e.getMessage());
         }
       }));
@@ -129,7 +132,6 @@ public class MainPresenter implements MainContract.Presenter {
 
   @Override
   public void unbind() {
-//    mDisposable.dispose();
     mView = null;
   }
 
@@ -148,5 +150,12 @@ public class MainPresenter implements MainContract.Presenter {
         loadData(location.getLatitude(), location.getLongitude());
       }
     });
+  }
+
+  @Override
+  public void onMapReady() {
+    if (taxiList != null) {
+      mView.displayNearistTaxiCabs(taxiList);
+    }
   }
 }

@@ -86,15 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     MyUtil.logd(TAG, "onMapReady");
     mMap = googleMap;
     setUpGoogleMap();
-  }
-
-  @Override
-  protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    if (currentLocation != null) {
-      outState.putString(CURRENT_LAT, Double.toString(currentLocation.latitude));
-      outState.putString(CURRENT_LNG, Double.toString(currentLocation.longitude));
-    }
+    mPresenter.onMapReady();
   }
 
   private void setUpGoogleMap() {
@@ -121,10 +113,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     if (currentLocation == null) {
       LatLng bishkek = new LatLng(42.88, 74.58);
+      currentLocation = bishkek;
       mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 14));
       mPresenter.loadData(bishkek.latitude, bishkek.longitude);
     } else {
       mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 14));
+    }
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    if (currentLocation != null) {
+      outState.putString(CURRENT_LAT, Double.toString(currentLocation.latitude));
+      outState.putString(CURRENT_LNG, Double.toString(currentLocation.longitude));
     }
   }
 
