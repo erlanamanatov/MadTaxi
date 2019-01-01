@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   private static final int REQUEST_GPS = 1;
   private static final String CURRENT_LAT = "current lat";
   private static final String CURRENT_LNG = "current lng";
+  private static final String CURRENT_ZOOM = "current zoom";
   private String pendingCall;
   private GoogleMap mMap;
   private MainContract.Presenter mPresenter;
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   ProgressBar gpsProgressBar;
   TextView gpsInfoText, tvAddress;
   LatLng currentLocation;
+  Float currentZoom;
   private ClusterManager<TaxiClusterItem> mClusterManager;
 
   @Override
@@ -63,9 +65,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     if (savedInstanceState != null) {
       currentLocation = new LatLng(
-          Double.parseDouble(savedInstanceState.getString(CURRENT_LAT, "42.88")),
-          Double.parseDouble(savedInstanceState.getString(CURRENT_LNG, "74.58"))
+          savedInstanceState.getDouble(CURRENT_LAT, 42.88),
+          savedInstanceState.getDouble(CURRENT_LNG, 74.58)
       );
+      currentZoom = savedInstanceState.getFloat(CURRENT_ZOOM, 14);
     }
     SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
         .findFragmentById(R.id.map);
@@ -117,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bishkek, 14));
       mPresenter.loadData(bishkek.latitude, bishkek.longitude);
     } else {
-      mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 14));
+      mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, currentZoom));
     }
   }
 
@@ -125,8 +128,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     if (currentLocation != null) {
-      outState.putString(CURRENT_LAT, Double.toString(currentLocation.latitude));
-      outState.putString(CURRENT_LNG, Double.toString(currentLocation.longitude));
+      outState.putDouble(CURRENT_LAT, currentLocation.latitude);
+      outState.putDouble(CURRENT_LNG, currentLocation.longitude);
+      outState.putFloat(CURRENT_ZOOM, mMap.getCameraPosition().zoom);
     }
   }
 

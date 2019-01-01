@@ -55,7 +55,7 @@ public class MainPresenter implements MainContract.Presenter {
           .flatMap(company -> Observable.fromIterable(getTaxiCabs(company)))
           .map(TaxiClusterItem::new)
           .subscribeOn(Schedulers.io())
-          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
+//          .doOnNext(taxiClusterItem -> MyUtil.logd(TAG, "taxiClusterItem onNext(): " + taxiClusterItem.getTaxiCab().toString()))
           .toList()
           .observeOn(AndroidSchedulers.mainThread());
 
@@ -63,7 +63,7 @@ public class MainPresenter implements MainContract.Presenter {
         @Override
         public void onSuccess(List<TaxiClusterItem> taxiItems) {
           if (isViewAttached()) {
-            MyUtil.logd(TAG, "Data loaded successfully, taxi count = " + taxiItems.size());
+            MyUtil.logd(TAG, "Data loaded successfully, taxi count   = " + taxiItems.size());
             taxiList = taxiItems;
             mView.displayNearistTaxiCabs(taxiList);
           }
@@ -115,12 +115,14 @@ public class MainPresenter implements MainContract.Presenter {
           @Override
           public void onSuccess(String s) {
             if (isViewAttached()) {
+              MyUtil.logd(TAG, "Address on success, " + s);
               mView.showAddress(s);
             }
           }
 
           @Override
           public void onError(Throwable e) {
+            MyUtil.logd(TAG, "Address on Error");
             mView.showAddress("");
           }
         }));
